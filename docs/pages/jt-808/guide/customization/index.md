@@ -1,15 +1,14 @@
 # 定制自己的组件
 
 ::: tip 提示
-目前几乎所有的自定义的配置都需要继承配置类 `io.github.hylexus.jt808.support.netty.Jt808ServerConfigure` 。
+- 从 `1.0.7-RELEASE` 开始，几乎所有的自定义的配置都需要继承配置类 `io.github.hylexus.jt808.boot.config.Jt808ServerConfigurationSupport`
+- 并且`不再支持`使用 `io.github.hylexus.jt808.support.netty.Jt808ServerConfigure` 配置（容易导致Bean之间的循环依赖）
+
 可以通过如下代码片段的方式来自定义组件：
 
 ```java
-import io.github.hylexus.jt808.support.netty.Jt808ServerConfigure;
-import org.springframework.context.annotation.Configuration;
-
 @Configuration
-public class Jt808Config extends Jt808ServerConfigure {
+public class Jt808Config extends Jt808ServerConfigurationSupport {
     // TODO 重写配置方法或覆盖父类的Bean
 }
 
@@ -24,5 +23,8 @@ public class Jt808Config extends Jt808ServerConfigure {
 - [Session相关配置](./session-config.md)
 - [Netty相关配置](./netty-config.md)
 - [转义相关配置](./escape-config.md)
+- [消息类型配置](./msg-type-config.md)
 - [消息转换器配置](./msg-converter-config.md)
 - [消息处理器配置](./msg-handler-config.md)
+- [TerminalValidator](./terminal-validator-config.md)
+- [AuthValidator](./auth-validator-config.md)

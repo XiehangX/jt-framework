@@ -1,6 +1,5 @@
 package io.github.hylexus.jt808.samples.annotation.entity.req;
 
-import io.github.hylexus.jt.annotation.msg.req.Jt808ReqMsgBody;
 import io.github.hylexus.jt.annotation.msg.req.basic.BasicField;
 import io.github.hylexus.jt.annotation.msg.req.extra.ExtraField;
 import io.github.hylexus.jt.annotation.msg.req.extra.ExtraMsgBody;
@@ -15,8 +14,6 @@ import lombok.ToString;
 import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.List;
-
 import static io.github.hylexus.jt.data.MsgDataType.*;
 
 /**
@@ -26,7 +23,7 @@ import static io.github.hylexus.jt.data.MsgDataType.*;
 @Slf4j
 @Data
 @Accessors(chain = true)
-@Jt808ReqMsgBody(msgType = 0x0200)
+//@Jt808ReqMsgBody(msgType = 0x0200)
 public class LocationUploadRequestMsgBody implements RequestMsgBody, RequestMsgMetadataAware {
 
     @ToString.Exclude
@@ -84,9 +81,6 @@ public class LocationUploadRequestMsgBody implements RequestMsgBody, RequestMsgM
             byteCountMethod = "getExtraInfoLength"
     )
     private ExtraInfo extraInfo;
-    // 也可将将附加项解析为一个List
-    @BasicField(startIndex = 28, byteCountMethod = "getExtraInfoLength", dataType = LIST)
-    private List<ExtraInfoItem> extraInfoItemList;
 
     @Override
     public void setRequestMsgMetadata(RequestMsgMetadata metadata) {
@@ -117,26 +111,6 @@ public class LocationUploadRequestMsgBody implements RequestMsgBody, RequestMsgM
         @ExtraField.NestedFieldMapping(msgId = 0x31, dataType = BYTE)
         private int field0x31;
 
-        @ExtraField.NestedFieldMapping(msgId = 0xe2, dataType = WORD)
-        private int field0xe2;
-
-        @ExtraField.NestedFieldMapping(msgId = 0xe1, dataType = DWORD)
-        private int field0xe1;
-
-        @ExtraField.NestedFieldMapping(msgId = 0xE3, dataType = BYTES)
-        private byte[] field0xe3;
-
-        @ExtraField.NestedFieldMapping(msgId = 0xE4, dataType = BYTES)
-        private byte[] field0xe4;
-
-        @ExtraField.NestedFieldMapping(msgId = 0xE5, dataType = DWORD)
-        private int field0xe5;
-
-        @ExtraField.NestedFieldMapping(msgId = 0xE6, dataType = BYTE)
-        private byte field0xe6;
-
-        @ExtraField.NestedFieldMapping(msgId = 0x53, dataType = BYTES)
-        private byte[] field0x53;
     }
 
     @Data

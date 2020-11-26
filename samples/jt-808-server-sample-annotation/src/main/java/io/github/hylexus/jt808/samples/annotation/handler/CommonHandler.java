@@ -11,6 +11,7 @@ import io.github.hylexus.jt808.msg.req.BuiltinEmptyRequestMsgBody;
 import io.github.hylexus.jt808.msg.req.BuiltinTerminalCommonReplyMsgBody;
 import io.github.hylexus.jt808.msg.resp.VoidRespMsgBody;
 import io.github.hylexus.jt808.samples.annotation.entity.req.*;
+import io.github.hylexus.jt808.samples.annotation.entity.req.demo01.LocationUploadRequestMsgBodyDemo01;
 import io.github.hylexus.jt808.samples.annotation.entity.resp.RegisterReplyMsgBody;
 import io.github.hylexus.jt808.samples.annotation.entity.resp.ServerCommonReplyMsgBody;
 import io.github.hylexus.jt808.samples.annotation.serivce.TerminalService;
@@ -68,7 +69,10 @@ public class CommonHandler {
     @Jt808RequestMsgHandlerMapping(msgType = 0x0200)
     public ServerCommonReplyMsgBody processLocationMsg(
             Jt808Session session, RequestMsgMetadata metadata,
-            RequestMsgHeader header, LocationUploadRequestMsgBody msgBody) {
+            RequestMsgHeader header,
+            // LocationUploadRequestMsgBody msgBody,
+            //LocationUploadRequestMsgBodyDemo02 msgBody,
+            LocationUploadRequestMsgBodyDemo01 msgBody) {
 
         assert header.getMsgId() == BuiltinJt808MsgType.CLIENT_LOCATION_INFO_UPLOAD.getMsgId();
         assert session.getTerminalId().equals(header.getTerminalId());
@@ -105,6 +109,12 @@ public class CommonHandler {
     @Jt808RequestMsgHandlerMapping(msgType = 0x0704)
     public ServerCommonReplyMsgBody processMsg0704(RequestMsgHeader header, Msg0704 msg) {
         return new ServerCommonReplyMsgBody(header.getFlowId(), CLIENT_LOCATION_INFO_BATCH_UPLOAD.getMsgId(), (byte) 0);
+    }
+
+    @Jt808RequestMsgHandlerMapping(msgType = 0x0104)
+    public ServerCommonReplyMsgBody processMsg0104(Msg0104 msg, RequestMsgHeader header) {
+        log.info("processMsg0104: {}", msg);
+        return new ServerCommonReplyMsgBody(header.getFlowId(), REQ_QUERY_LOCK_PARAM_REPLY.getMsgId(), (byte) 0);
     }
 
     @Jt808ExceptionHandler

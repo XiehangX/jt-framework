@@ -13,6 +13,7 @@ import io.github.hylexus.jt808.converter.impl.CustomReflectionBasedRequestMsgBod
 import io.github.hylexus.jt808.dispatcher.CommandSender;
 import io.github.hylexus.jt808.dispatcher.RequestMsgDispatcher;
 import io.github.hylexus.jt808.ext.AuthCodeValidator;
+import io.github.hylexus.jt808.ext.TerminalValidator;
 import io.github.hylexus.jt808.handler.MsgHandler;
 import io.github.hylexus.jt808.handler.impl.reflection.CustomReflectionBasedRequestMsgHandler;
 import io.github.hylexus.jt808.handler.impl.reflection.HandlerMethod;
@@ -24,7 +25,7 @@ import io.github.hylexus.jt808.session.Jt808SessionManager;
 import io.github.hylexus.jt808.session.Jt808SessionManagerEventListener;
 import io.github.hylexus.jt808.support.MsgHandlerMapping;
 import io.github.hylexus.jt808.support.RequestMsgBodyConverterMapping;
-import io.github.hylexus.jt808.support.netty.Jt808ServerConfigure;
+import io.github.hylexus.jt808.support.netty.Jt808ServerNettyConfigure;
 import lombok.Data;
 import lombok.Setter;
 import lombok.experimental.Accessors;
@@ -46,7 +47,6 @@ import java.util.Set;
 import java.util.function.Function;
 
 import static io.github.hylexus.jt.utils.CommonUtils.*;
-import static io.github.hylexus.jt808.boot.config.Jt808ServerAutoConfigure.*;
 import static java.util.stream.Collectors.toMap;
 import static org.springframework.boot.ansi.AnsiColor.BRIGHT_BLACK;
 
@@ -58,6 +58,12 @@ import static org.springframework.boot.ansi.AnsiColor.BRIGHT_BLACK;
 @Order(200)
 public class Jt808ServerComponentStatistics implements CommandLineRunner, ApplicationContextAware {
 
+    public static final AnsiColor SERVER_BANNER_COLOR = AnsiColor.BRIGHT_BLUE;
+    public static final AnsiColor BUILTIN_COMPONENT_COLOR = AnsiColor.BRIGHT_CYAN;
+    public static final AnsiColor CUSTOM_COMPONENT_COLOR = AnsiColor.GREEN;
+    public static final AnsiColor DEPRECATED_COMPONENT_COLOR = AnsiColor.RED;
+    public static final AnsiColor UNKNOWN_COMPONENT_TYPE_COLOR = AnsiColor.BRIGHT_RED;
+
     private static final String END_OF_LINE = "\n";
     private final RequestMsgBodyConverterMapping msgConverterMapping;
     private final MsgHandlerMapping msgHandlerMapping;
@@ -68,11 +74,13 @@ public class Jt808ServerComponentStatistics implements CommandLineRunner, Applic
                     Jt808SessionManager.class,
                     BytesEncoder.class,
                     MsgTypeParser.class,
+                    TerminalValidator.class,
                     AuthCodeValidator.class,
                     RequestMsgDispatcher.class,
                     RequestMsgQueue.class,
                     RequestMsgQueueListener.class,
-                    Jt808ServerConfigure.class,
+                    //Jt808ServerConfigure.class,
+                    Jt808ServerNettyConfigure.class,
                     ResponseMsgBodyConverter.class,
                     HandlerMethodArgumentResolver.class,
                     CommandSender.class
@@ -175,6 +183,9 @@ public class Jt808ServerComponentStatistics implements CommandLineRunner, Applic
     }
 
     private boolean containsBean(Object handler) {
+        if (handler == null) {
+            return false;
+        }
         String[] names = applicationContext.getBeanNamesForType(handler.getClass());
         return names != null && names.length != 0;
     }

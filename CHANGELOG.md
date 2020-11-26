@@ -1,3 +1,63 @@
+# 1.0.10-SNAPSHOT
+
+### ⭐ New Features
+
+- https://github.com/hylexus/jt-framework/pull/28
+    - @Jt808RequestMsgConverter
+    - @Jt808RequestMsgHandler
+
+### 🐞 Bug Fixes
+
+- https://github.com/hylexus/jt-framework/issues/26
+
+# 1.0.9-SNAPSHOT
+
+### ⭐ New Features
+
+- `@NestedFieldMapping` 支持List类型 (https://github.com/hylexus/jt-framework/issues/25)
+
+### 🐞 Bug Fixes
+
+
+### 🔨 Others
+
+- 文档更新
+
+# 1.0.8-SNAPSHOT
+
+### ⭐ New Features
+
+- 支持2019版: [`jt808.protocol.version`](https://hylexus.github.io/jt-framework/jt-808/config/#version)
+
+### 🐞 Bug Fixes
+
+- `@NestedFieldMapping` bug
+
+### 🔨 Others
+
+- 文档更新
+
+# 1.0.7-SNAPSHOT
+
+### ⭐ New Features
+
+- 修改自定义配置的方式
+    - 旧版的`Jt808ServerConfigure` 容易引发Bean的循环依赖
+    - 从1.0.7-RELEASE开始，使用 `Jt808ServerConfigurationSupport` 来自定义配置
+- Maven依赖的 `scope` 从 `runtime` 改为 `compile`，涉及到的依赖如下：
+    - Netty
+    - oaks-lib
+
+### 🐞 Bug Fixes
+
+- https://github.com/hylexus/jt-framework/issues/18
+- BytesEncoder转义bug
+
+### 🔨 Others
+
+- Jt808Session#setChannel
+- BytesEncoder支持校验码逻辑自定义
+
 # 1.0.5-SNAPSHOT
 
 ### ⭐ New Features

@@ -11,4 +11,7 @@ import java.lang.annotation.*;
 @Documented
 public @interface Jt808RequestMsgHandler {
 
+    int msgType() default 0;
+
+    String desc() default "";
 }

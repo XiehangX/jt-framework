@@ -14,6 +14,7 @@ import io.github.hylexus.oaks.utils.Bytes;
 import io.github.hylexus.oaks.utils.IntBitOps;
 import lombok.extern.slf4j.Slf4j;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -30,10 +31,15 @@ public class ExtraFieldDecoder {
     private final DataTypeConverterRegistry dataTypeConverterRegistry = new DefaultDataTypeConverterRegistry();
     private final SplittableFieldDecoder splittableFieldDecoder = new SplittableFieldDecoder();
     private final SlicedFromDecoder slicedFromDecoder = new SlicedFromDecoder();
+    private final FieldDecoder decoder;
+
+    public ExtraFieldDecoder(FieldDecoder decoder) {
+        this.decoder = decoder;
+    }
 
     public void decodeExtraField(
             byte[] bytes, int startIndex, int length, Object instance, JavaBeanFieldMetadata fieldMetadata)
-            throws IllegalAccessException, InstantiationException {
+            throws IllegalAccessException, InstantiationException, InvocationTargetException {
 
         final Class<?> extraFieldClass = fieldMetadata.getFieldType();
 
@@ -46,7 +52,7 @@ public class ExtraFieldDecoder {
         int byteCountOfMsgId = extraMsgBodyInfo.byteCountOfMsgId();
         int byteCountOfContentLength = extraMsgBodyInfo.byteCountOfContentLength();
         decodeNestedField(
-                bytes, startIndex, length, extraFieldInstance, mappingInfo,
+                bytes, startIndex, bytes.length, extraFieldInstance, mappingInfo,
                 byteCountOfMsgId, byteCountOfContentLength
         );
     }
@@ -54,17 +60,13 @@ public class ExtraFieldDecoder {
     @SuppressWarnings({"unchecked", "rawtypes"})
     private void decodeNestedField(
             byte[] bytes, int startIndex, int length, Object instance, Map<Integer, NestedFieldMappingInfo> mappingInfo,
-            int byteCountOfMsgId, int byteCountOfContentLength) throws IllegalAccessException, InstantiationException {
+            int byteCountOfMsgId, int byteCountOfContentLength) throws IllegalAccessException, InstantiationException, InvocationTargetException {
 
         int readerIndex = startIndex;
         while (readerIndex < length) {
-            int msgId = IntBitOps.intFromBytes(bytes, readerIndex, byteCountOfMsgId);
+            // final for suppress [VariableDeclarationUsageDistance]
+            final int msgId = IntBitOps.intFromBytes(bytes, readerIndex, byteCountOfMsgId);
             readerIndex += byteCountOfMsgId;
-
-            final NestedFieldMappingInfo info = mappingInfo.get(msgId);
-            if (info == null) {
-                continue;
-            }
 
             int bodyLength = IntBitOps.intFromBytes(bytes, readerIndex, byteCountOfContentLength);
             readerIndex += byteCountOfContentLength;
@@ -72,27 +74,37 @@ public class ExtraFieldDecoder {
             byte[] bodyBytes = Bytes.subSequence(bytes, readerIndex, bodyLength);
             readerIndex += bodyLength;
 
+            final NestedFieldMappingInfo info = mappingInfo.get(msgId);
+            if (info == null) {
+                continue;
+            }
+
+            final JavaBeanFieldMetadata targetFieldMetadata = info.getFieldMetadata();
             if (info.isNestedExtraField()) {
-                Map<Integer, NestedFieldMappingInfo> map = getMappingInfo(info.getFieldMetadata().getFieldType());
+                Map<Integer, NestedFieldMappingInfo> map = getMappingInfo(targetFieldMetadata.getFieldType());
 
-                ExtraMsgBody ex = info.getFieldMetadata().getFieldType().getAnnotation(ExtraMsgBody.class);
+                ExtraMsgBody ex = targetFieldMetadata.getFieldType().getAnnotation(ExtraMsgBody.class);
 
-                Object newInstance = info.getFieldMetadata().getFieldType().newInstance();
-                info.getFieldMetadata().setFieldValue(instance, newInstance);
+                Object newInstance = targetFieldMetadata.getFieldType().newInstance();
+                targetFieldMetadata.setFieldValue(instance, newInstance);
 
-                decodeNestedField(bodyBytes, 0, bodyBytes.length, newInstance, map, ex.byteCountOfMsgId(), ex.byteCountOfContentLength());
+                if (!map.isEmpty()) {
+                    decodeNestedField(bodyBytes, 0, bodyBytes.length, newInstance, map, ex.byteCountOfMsgId(), ex.byteCountOfContentLength());
+                }
+                decoder.decode(newInstance, bodyBytes);
             } else {
                 // TODO auto-inject
-                ConvertibleMetadata key = ConvertibleMetadata.forJt808MsgDataType(info.getDataType(), info.getFieldMetadata().getFieldType());
+                ConvertibleMetadata key = ConvertibleMetadata.forJt808MsgDataType(info.getDataType(), targetFieldMetadata.getFieldType());
                 Optional<DataTypeConverter<?, ?>> converterInfo = dataTypeConverterRegistry.getConverter(key);
                 if (converterInfo.isPresent()) {
                     DataTypeConverter converter = converterInfo.get();
-                    Object value = converter.convert(byte[].class, info.getFieldMetadata().getFieldType(), bodyBytes);
-                    // fix https://github.com/hylexus/jt-framework/issues/2
-                    info.getFieldMetadata().setFieldValue(instance, value);
-                    splittableFieldDecoder.processSplittableField(instance, info.getFieldMetadata(), value);
+                    Object value = targetFieldMetadata.getFieldValue(instance, false);
+                    //Object value = converter.convert(byte[].class, info.getFieldMetadata().getFieldType(), bodyBytes);
+                    value = converter.convert(key, targetFieldMetadata, bodyBytes, value, info.getItemDataType());
+                    targetFieldMetadata.setFieldValue(instance, value);
+                    splittableFieldDecoder.processSplittableField(instance, targetFieldMetadata, value);
                 } else {
-                    log.error("No converter found for filed {}", info.getFieldMetadata().getFieldType().getName());
+                    log.error("No converter found for filed {}", targetFieldMetadata.getFieldType().getName());
                 }
                 //                Object value = populateBasicField(bodyBytes, instance, info.getFieldMetadata(), info.getDataType(), 0,
                 //                        bodyBytes.length);
@@ -126,6 +138,7 @@ public class ExtraFieldDecoder {
             NestedFieldMappingInfo info = new NestedFieldMappingInfo();
             info.setMsgId(nestedMetadata.msgId());
             info.setDataType(nestedMetadata.dataType());
+            info.setItemDataType(nestedMetadata.itemDataType());
             info.setNestedExtraField(nestedMetadata.isNestedExtraField());
             info.setByteCountOfMsgId(bodyProps.byteCountOfMsgId());
             info.setByteCountOfContentLength(bodyProps.byteCountOfContentLength());

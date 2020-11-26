@@ -24,7 +24,7 @@ sidebarDepth: 2
 
 ::: warning 注意
 - 这个报文格式可能和你使用的有所不同，请加以区分！！！
-- 如何以 `十六进制格式` 发包请移步 [推荐调试工具](pages/jt-808/guide/FAQjt-808/guide/FAQ/debug.md#调试工具)
+- 如何以 `十六进制格式` 发包请移步 [推荐调试工具](../FAQ/debug.md)
 :::
 
 ```
@@ -302,15 +302,16 @@ private List<ExtraInfoItem> extraInfoItemList;
 public class ExtraInfo {
     @ExtraField.NestedFieldMapping(msgId = 0x30, dataType = BYTE)
     private int field0x30;
+    
+    // 这里写成List仅仅为了示例，在msgId重复时可以使用List类型
+    @ExtraField.NestedFieldMapping(msgId = 0x0001, dataType = LIST, itemDataType = DWORD)
+    private List<Integer> field0x0001;
 
     @ExtraField.NestedFieldMapping(msgId = 0x31, dataType = BYTE)
     private int field0x31;
 
     @ExtraField.NestedFieldMapping(msgId = 0xe1, dataType = DWORD)
     private int field0xe1;
-
-    @ExtraField.NestedFieldMapping(msgId = 0xE3, dataType = BYTES)
-    private byte[] field0xe3;
 
     @ExtraField.NestedFieldMapping(msgId = 0xE4, dataType = BYTES)
     private byte[] field0xe4;
